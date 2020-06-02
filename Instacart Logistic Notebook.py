@@ -869,7 +869,7 @@ xgb.plot_importance(model)
 model.get_xgb_params()
 
 
-# In[88]:
+# In[76]:
 
 
 ###########################
@@ -894,8 +894,8 @@ from sklearn.model_selection import GridSearchCV
 # More paremeters means that GridSearch will create and evaluate more models.
 ####################################    
 paramGrid = {"max_depth":[5,10],
-            "colsample_bytree":[0.3,0.4],
-            "n_estimators":[50,100,150,200]}  
+            "colsample_bytree":[0.3,0.4,0.5],
+            "n_estimators":[50,100]}  
 
 ########################################
 ## INSTANTIATE XGBClassifier()
@@ -924,7 +924,7 @@ print("The best parameters are: /n",  gridsearch.best_params_)
 model = gridsearch.best_estimator_
 
 
-# In[89]:
+# In[77]:
 
 
 ##################################
@@ -933,13 +933,13 @@ model = gridsearch.best_estimator_
 xgb.plot_importance(model)
 
 
-# In[82]:
+# In[78]:
 
 
 model.get_params()
 
 
-# In[ ]:
+# In[79]:
 
 
 del [orders_future,X_train,y_train]
@@ -950,7 +950,7 @@ gc.collect()
 # The model that we have created is stored in the **model** object.
 # At this step we predict the values for the test data and we store them in a new column in the same DataFrame.
 
-# In[ ]:
+# In[80]:
 
 
 '''
@@ -960,7 +960,7 @@ test_pred[0:20] #display the first 20 predictions of the numpy array
 '''
 
 
-# In[ ]:
+# In[81]:
 
 
 ## OR set a custom threshold (in this problem, 0.21 yields the best prediction)
@@ -968,7 +968,7 @@ test_pred = (model.predict_proba(data_test)[:,1] >= 0.21).astype(int)
 test_pred[0:20] #display the first 20 predictions of the numpy array
 
 
-# In[ ]:
+# In[82]:
 
 
 #Save the prediction in a new column in the data_test DF
@@ -976,7 +976,7 @@ data_test['prediction'] = test_pred
 data_test.head()
 
 
-# In[ ]:
+# In[83]:
 
 
 #Reset the index
@@ -993,7 +993,7 @@ final.head()
 # 
 # To create this file we retrieve from orders DataFrame all the test orders with their matching user_id:
 
-# In[ ]:
+# In[84]:
 
 
 orders_test = orders.loc[orders.eval_set=='test',("user_id", "order_id") ]
@@ -1003,7 +1003,7 @@ orders_test.head()
 # We merge it with our predictions (from chapter 5) using a left join:
 # <img src="https://i.imgur.com/KJubu0v.jpg" width="400">
 
-# In[ ]:
+# In[85]:
 
 
 final = final.merge(orders_test, on='user_id', how='left')
@@ -1014,7 +1014,7 @@ final.head()
 # - remove any undesired column (in our case user_id)
 # - set product_id column as integer (mandatory action to proceed to the next step)
 
-# In[ ]:
+# In[86]:
 
 
 #remove user_id column
@@ -1032,7 +1032,7 @@ final.head()
 
 # In this step we initiate an empty dictionary. In this dictionary we will place as index the order_id and as values all the products that the order will have. If none product will be purchased, we have explicitly to place the string "None". All this syntax follows the requirements of the competition for the submission file.
 
-# In[ ]:
+# In[87]:
 
 
 d = dict()
@@ -1055,7 +1055,7 @@ d
 
 # Now we convert the dictionary to a DataFrame and prepare it to extact it into a .csv file
 
-# In[ ]:
+# In[88]:
 
 
 #Convert the dictionary into a DataFrame
@@ -1071,7 +1071,7 @@ sub.head()
 
 # **The submission file should have 75.000 predictions to be submitted in the competition**
 
-# In[ ]:
+# In[89]:
 
 
 #Check if sub file has 75000 predictions
@@ -1080,7 +1080,7 @@ sub.shape[0]
 
 # The DataFrame can now be converted to .csv file. Pandas can export a DataFrame to a .csv file with the .to_csv( ) function.
 
-# In[ ]:
+# In[90]:
 
 
 sub.to_csv('sub.csv', index=False)
