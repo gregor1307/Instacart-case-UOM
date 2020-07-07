@@ -130,7 +130,7 @@ departments = pd.read_csv('../input/departments.csv')
 
 #### Remove triple quotes to trim your dataset and experiment with your data
 # COMMANDS FOR CODING TESTING - Get 10% of users 
-orders = orders.loc[orders.user_id.isin(orders.user_id.drop_duplicates().sample(frac=0.1, random_state=25))] 
+###orders = orders.loc[orders.user_id.isin(orders.user_id.drop_duplicates().sample(frac=0.1, random_state=25))] 
 
 
 # We now use the .head( ) method in order to visualise the first 10 rows of these tables. Click the Output button below to see the tables.
