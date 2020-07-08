@@ -107,8 +107,8 @@ for file in os.listdir(working_directory):   # get the list of files
 
 
 orders = pd.read_csv('../input/orders.csv')
-order_products_train = pd.read_csv('../input/order_products_train.csv')
-order_products_prior = pd.read_csv('./input/order_products_prior.csv')
+order_products_train = pd.read_csv('../input/order_products__train.csv')
+order_products_prior = pd.read_csv('./input/order_products__prior.csv')
 products = pd.read_csv('../input/products.csv')
 aisles = pd.read_csv('../input/aisles.csv')
 departments = pd.read_csv('../input/departments.csv')
