@@ -75,7 +75,7 @@ gc.enable()                       # Activate
 
 
 from kaggle.api.kaggle_api_extended import KaggleApi
-api = KaggleApi({"username":"gregorchatzi","key":"092b1fcf740994a6396f44d14edac835"})
+api = KaggleApi({"username":"gregorchatzi","key":"3c31bd1dd95fe9be2ea40a7987b0b1fc"})
 api.authenticate()
 files = api.competition_download_files('instacart-market-basket-analysis')
 
@@ -108,7 +108,7 @@ for file in os.listdir(working_directory):   # get the list of files
 
 orders = pd.read_csv('../input/orders.csv')
 order_products_train = pd.read_csv('../input/order_products__train.csv')
-order_products_prior = pd.read_csv('./input/order_products__prior.csv')
+order_products_prior = pd.read_csv('../input/order_products__prior.csv')
 products = pd.read_csv('../input/products.csv')
 aisles = pd.read_csv('../input/aisles.csv')
 departments = pd.read_csv('../input/departments.csv')
@@ -400,9 +400,7 @@ prd.head()
 # the x on lambda function is a temporary variable which represents each group
 # shape[0] on a DataFrame returns the number of rows
 p_reorder = op.groupby('product_id').filter(lambda x: x.shape[0] >40)#####
-p_reorder.head()####
-
-###Auto einai to diko mou filtro
+p_reorder.head()
 
 
 # In[37]:
@@ -487,13 +485,94 @@ gc.collect()
 prd.head()
 
 
+# In[46]:
+
+
+ap5=products.merge(op5,on='product_id',how='right')
+ap5=ap5.groupby(['user_id','aisle_id'])['order_id'].count().to_frame('times_aisle')
+ap5.head()
+
+
+# In[47]:
+
+
+ap5_sum=ap5.groupby('user_id')['times_aisle'].sum().to_frame('t_times_aisle')
+ap5_sum.head()
+
+
+# In[48]:
+
+
+ap5=ap5.merge(ap5_sum,on='user_id',how='left')
+ap5.head()
+
+
+# In[49]:
+
+
+ap5['freq_aisle_per_costumer']=ap5.times_aisle/ap5.t_times_aisle
+ap5=ap5.drop(['times_aisle','t_times_aisle'],axis=1)
+ap5.head()
+
+
+# In[50]:
+
+
+dp5=products.merge(op5,on='product_id',how='right')
+dp5=dp5.groupby(['user_id','department_id'])['order_id'].count().to_frame('times_dep')
+dp5.head()
+
+
+# In[51]:
+
+
+dp5_sum=dp5.groupby('user_id')['times_dep'].sum().to_frame('t_times_dep')
+dp5_sum.head()
+
+
+# In[52]:
+
+
+dp5=dp5.merge(dp5_sum,on='user_id',how='left')
+dp5.head()
+
+
+# In[53]:
+
+
+dp5['freq_dep_per_costumer']=dp5.times_dep/dp5.t_times_dep
+dp5=dp5.drop(['times_dep','t_times_dep'],axis=1)
+dp5.head()
+
+
+# In[54]:
+
+
+user=user.merge(ap5,on='user_id',how='left')
+user.head()
+
+
+# In[55]:
+
+
+user=user.merge(dp5,on='user_id',how='left')
+user.head()
+
+
+# In[56]:
+
+
+del ap5,ap5_sum,dp5,dp5_sum
+gc.collect()
+
+
 # ## 2.3 Create user-product predictors
 # 
 # 
 # ### 2.3.1 How many times a user bought a product 📚📝
 # We create different groups that contain all the rows for each combination of user and product. Then with the aggregation function .count( ) we get how many times each user bought a product. We save the results on new **uxp** DataFrame.
 
-# In[46]:
+# In[57]:
 
 
 # Create distinct groups for each combination of user and product, count orders, save the result for each user X product to a new DataFrame 
@@ -502,7 +581,7 @@ uxp = uxp.reset_index()
 uxp.head()
 
 
-# In[47]:
+# In[58]:
 
 
 times = op.groupby(['user_id', 'product_id'])[['order_id']].count()
@@ -510,14 +589,14 @@ times.columns = ['Times_Bought_N']
 times.head()
 
 
-# In[48]:
+# In[59]:
 
 
 total_orders = op.groupby('user_id')['order_number'].max().to_frame('total_orders') #
 total_orders.head()
 
 
-# In[49]:
+# In[60]:
 
 
 first_order_no = op.groupby(['user_id', 'product_id'])['order_number'].min().to_frame('first_order_number')
@@ -525,14 +604,14 @@ first_order_no  = first_order_no.reset_index()
 first_order_no.head()
 
 
-# In[50]:
+# In[61]:
 
 
 span = pd.merge(total_orders, first_order_no, on='user_id', how='right')
 span.head()
 
 
-# In[51]:
+# In[62]:
 
 
 # The +1 includes in the difference the first order were the product has been purchased
@@ -540,28 +619,28 @@ span['Order_Range_D'] = span.total_orders - span.first_order_number + 1
 span.head()
 
 
-# In[52]:
+# In[63]:
 
 
 uxp_ratio = pd.merge(times, span, on=['user_id', 'product_id'], how='left')
 uxp_ratio.head()
 
 
-# In[53]:
+# In[64]:
 
 
 #Remove temporary DataFrames
 del [times, first_order_no, span]
 
 
-# In[54]:
+# In[65]:
 
 
 uxp_ratio['uxp_reorder_ratio'] = uxp_ratio.Times_Bought_N / uxp_ratio.Order_Range_D ##
 uxp_ratio.head()
 
 
-# In[55]:
+# In[66]:
 
 
 uxp = uxp.merge(uxp_ratio, on=['user_id', 'product_id'], how='left')
@@ -570,21 +649,21 @@ del uxp_ratio
 uxp.head()
 
 
-# In[56]:
+# In[67]:
 
 
 uxp = uxp.drop(['total_orders', 'first_order_number', 'Order_Range_D', 'Times_Bought_N'], axis=1)
 uxp.head()
 
 
-# In[57]:
+# In[68]:
 
 
 last_five = op5.groupby(['user_id','product_id'])['order_id'].count().to_frame('times_last5')
 last_five.head(10)
 
 
-# In[58]:
+# In[69]:
 
 
 uxp = uxp.merge(last_five, on=['user_id', 'product_id'], how='left')
@@ -593,7 +672,7 @@ del last_five
 uxp.head()
 
 
-# In[59]:
+# In[70]:
 
 
 del op
@@ -623,7 +702,7 @@ gc.collect()
 # 
 # The new DataFrame as we have already mentioned, will be called **data**.
 
-# In[60]:
+# In[71]:
 
 
 #Merge uxp features with the user features
@@ -632,7 +711,7 @@ data = uxp.merge(user, on='user_id', how='left')
 data.head()
 
 
-# In[61]:
+# In[72]:
 
 
 del uxp, user
@@ -647,7 +726,7 @@ gc.collect()
 # - all the observations of the data (features of userXproducts and users) DataFrame 
 # - all the **matching** observations of prd DataFrame with data based on matching key **"product_id"**
 
-# In[62]:
+# In[74]:
 
 
 #Merge uxp & user features (the new DataFrame) with prd features
@@ -655,7 +734,7 @@ data = data.merge(prd, on='product_id', how='left') #
 data.head()
 
 
-# In[63]:
+# In[ ]:
 
 
 del prd
@@ -684,7 +763,7 @@ gc.collect()
 
 # To filter and select the columns of our desire on orders (the 2 first steps) there are numerous approaches:
 
-# In[64]:
+# In[ ]:
 
 
 ## First approach:
@@ -708,7 +787,7 @@ orders_future.head(10)
 # 
 # <img src="https://i.imgur.com/m3pNVDW.jpg" width="400">
 
-# In[65]:
+# In[ ]:
 
 
 # bring the info of the future orders to data DF
@@ -728,7 +807,7 @@ data.head(10)
 # 
 # So now we filter the **data** DataFrame so to keep only the train users:
 
-# In[66]:
+# In[ ]:
 
 
 #Keep only the customers who we know what they bought in their future order
@@ -740,7 +819,7 @@ data_train.head()
 # 
 # <img src="https://i.imgur.com/kndys9d.jpg" width="400">
 
-# In[67]:
+# In[ ]:
 
 
 #Get from order_products_train all the products that the train users bought bought in their future order
@@ -756,7 +835,7 @@ data_train.head(15)
 # - Set as index the column(s) that describe uniquely each row (in our case "user_id" & "product_id")
 # - Remove columns which are not predictors (in our case: 'eval_set','order_id')
 
-# In[68]:
+# In[ ]:
 
 
 #Where the previous merge, left a NaN value on reordered column means that the customers they haven't bought the product. We change the value on them to 0.
@@ -764,7 +843,7 @@ data_train['reordered'] = data_train['reordered'].fillna(0)
 data_train.head(15)
 
 
-# In[69]:
+# In[ ]:
 
 
 #We set user_id and product_id as the index of the DF
@@ -772,7 +851,7 @@ data_train = data_train.set_index(['user_id', 'product_id'])
 data_train.head(15)
 
 
-# In[70]:
+# In[ ]:
 
 
 #We remove all non-predictor variables
@@ -789,7 +868,7 @@ data_train.head(15)
 # - Set as index the column(s) that uniquely describe each row (in our case "user_id" & "product_id")
 # - Remove the columns that are predictors (in our case:'eval_set', 'order_id')
 
-# In[71]:
+# In[ ]:
 
 
 #Keep only the future orders from customers who are labelled as test
@@ -797,7 +876,7 @@ data_test = data[data.eval_set=='test'] #
 data_test.head()
 
 
-# In[72]:
+# In[ ]:
 
 
 #We set user_id and product_id as the index of the DF
@@ -805,7 +884,7 @@ data_test = data_test.set_index(['user_id', 'product_id']) #
 data_test.head()
 
 
-# In[73]:
+# In[ ]:
 
 
 #We remove all non-predictor variables
@@ -824,7 +903,7 @@ data_test.head()
 # 2. We initiata a Logistic regression model with a specific random_state (so we can reproduce if we want to our model).
 # 3. Finally we train our model with the X_train and y_train data.
 
-# In[74]:
+# In[ ]:
 
 
 # TRAIN FULL 
@@ -863,13 +942,13 @@ model = xgbc.fit(X_train, y_train)
 xgb.plot_importance(model)
 
 
-# In[75]:
+# In[ ]:
 
 
 model.get_xgb_params()
 
 
-# In[76]:
+# In[ ]:
 
 
 ###########################
@@ -924,7 +1003,7 @@ print("The best parameters are: /n",  gridsearch.best_params_)
 model = gridsearch.best_estimator_
 
 
-# In[77]:
+# In[ ]:
 
 
 ##################################
@@ -933,13 +1012,13 @@ model = gridsearch.best_estimator_
 xgb.plot_importance(model)
 
 
-# In[78]:
+# In[ ]:
 
 
 model.get_params()
 
 
-# In[79]:
+# In[ ]:
 
 
 del [orders_future,X_train,y_train]
@@ -950,7 +1029,7 @@ gc.collect()
 # The model that we have created is stored in the **model** object.
 # At this step we predict the values for the test data and we store them in a new column in the same DataFrame.
 
-# In[80]:
+# In[ ]:
 
 
 '''
@@ -960,7 +1039,7 @@ test_pred[0:20] #display the first 20 predictions of the numpy array
 '''
 
 
-# In[81]:
+# In[ ]:
 
 
 ## OR set a custom threshold (in this problem, 0.21 yields the best prediction)
@@ -968,7 +1047,7 @@ test_pred = (model.predict_proba(data_test)[:,1] >= 0.21).astype(int)
 test_pred[0:20] #display the first 20 predictions of the numpy array
 
 
-# In[82]:
+# In[ ]:
 
 
 #Save the prediction in a new column in the data_test DF
@@ -976,7 +1055,7 @@ data_test['prediction'] = test_pred
 data_test.head()
 
 
-# In[83]:
+# In[ ]:
 
 
 #Reset the index
@@ -993,7 +1072,7 @@ final.head()
 # 
 # To create this file we retrieve from orders DataFrame all the test orders with their matching user_id:
 
-# In[84]:
+# In[ ]:
 
 
 orders_test = orders.loc[orders.eval_set=='test',("user_id", "order_id") ]
@@ -1003,7 +1082,7 @@ orders_test.head()
 # We merge it with our predictions (from chapter 5) using a left join:
 # <img src="https://i.imgur.com/KJubu0v.jpg" width="400">
 
-# In[85]:
+# In[ ]:
 
 
 final = final.merge(orders_test, on='user_id', how='left')
@@ -1014,7 +1093,7 @@ final.head()
 # - remove any undesired column (in our case user_id)
 # - set product_id column as integer (mandatory action to proceed to the next step)
 
-# In[86]:
+# In[ ]:
 
 
 #remove user_id column
@@ -1032,7 +1111,7 @@ final.head()
 
 # In this step we initiate an empty dictionary. In this dictionary we will place as index the order_id and as values all the products that the order will have. If none product will be purchased, we have explicitly to place the string "None". All this syntax follows the requirements of the competition for the submission file.
 
-# In[87]:
+# In[ ]:
 
 
 d = dict()
@@ -1055,7 +1134,7 @@ d
 
 # Now we convert the dictionary to a DataFrame and prepare it to extact it into a .csv file
 
-# In[88]:
+# In[ ]:
 
 
 #Convert the dictionary into a DataFrame
@@ -1071,7 +1150,7 @@ sub.head()
 
 # **The submission file should have 75.000 predictions to be submitted in the competition**
 
-# In[89]:
+# In[ ]:
 
 
 #Check if sub file has 75000 predictions
@@ -1080,7 +1159,7 @@ sub.shape[0]
 
 # The DataFrame can now be converted to .csv file. Pandas can export a DataFrame to a .csv file with the .to_csv( ) function.
 
-# In[90]:
+# In[ ]:
 
 
 sub.to_csv('sub.csv', index=False)
