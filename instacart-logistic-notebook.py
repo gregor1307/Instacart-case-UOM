@@ -126,8 +126,6 @@ orders['eval_set'] = orders['eval_set'].astype('category')
 products['product_name'] = products['product_name'].astype('category')
 
 
-# ## 1.4 Create a DataFrame with the orders and the products that have been purchased on prior orders (op)
-# We create a new DataFrame, named <b>op</b> which combines (merges) the DataFrames <b>orders</b> and <b>order_products_prior</b>. Bear in mind that <b>order_products_prior</b> DataFrame includes only prior orders, so the new DataFrame <b>op</b>  will contain only these observations as well. Towards this end, we use pandas' merge function with how='inner' argument, which returns records that have matching values in both DataFrames. <img src="https://i.imgur.com/zEK7FpY.jpg" width="400">
 
 # In[14]:
 
@@ -137,9 +135,6 @@ op = orders.merge(order_products_prior, on='order_id', how='inner')
 op.head()
 
 
-# The table contains for all the customers **(user_id)**: <br>
-# &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ➡︎ the orders **(order_id)** that they have placed accompanied with: <br>
-# &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ➡︎ the products **(product_id)** that have been bought in each order
 
 # In[15]:
 
@@ -155,18 +150,7 @@ op5 = op[op.order_number_back <= 5]
 op5.head()
 
 
-# # 2. Create Predictor Variables
-# We are now ready to identify and calculate predictor variables based on the provided data. We can create various types of predictors such as:
-# * <b>User predictors</b> describing the behavior of a user e.g. total number of orders of a user.
-# * <b>Product predictors</b> describing characteristics of a product e.g. total number of times a product has been purchased.
-# * <b>User & product predictors</b> describing the behavior of a user towards a specific product e.g. total times a user ordered a specific product.
-
-# ## 2.1 Create user predictors
-# 
-# 
-# ### 2.1.1 Number of orders per customer 📚📝
-# We calculate the total number of placed orders per customer. We create a **user** DataFrame to store the results.
-
+#
 # In[17]:
 
 
@@ -336,10 +320,7 @@ prd.head()
 # In[36]:
 
 
-#REMOVE PRODUCTS WITH LESS THAN 40 PURCHASES
-# execution time: 25 sec
-# the x on lambda function is a temporary variable which represents each group
-# shape[0] on a DataFrame returns the number of rows
+
 p_reorder = op.groupby('product_id').filter(lambda x: x.shape[0] >40)#####
 p_reorder.head()
 
@@ -507,12 +488,6 @@ del ap5,ap5_sum,dp5,dp5_sum
 gc.collect()
 
 
-# ## 2.3 Create user-product predictors
-# 
-# 
-# ### 2.3.1 How many times a user bought a product 📚📝
-# We create different groups that contain all the rows for each combination of user and product. Then with the aggregation function .count( ) we get how many times each user bought a product. We save the results on new **uxp** DataFrame.
-
 # In[57]:
 
 
@@ -620,28 +595,6 @@ del op
 gc.collect()
 
 
-# ## 2.4 Merge all features
-# We now merge the DataFrames with the three types of predictors that we have created (i.e., for the users, the products and the combinations of users and products).
-# 
-# We will start from the **uxp** DataFrame and we will add the user and prd DataFrames. We do so because we want our final DataFrame (which will be called **data**) to have the following structure: 
-# 
-# <img style="float: left;" src="https://i.imgur.com/mI5BbFE.jpg" >
-# 
-# 
-# 
-# 
-# 
-
-# ### 2.4.1 Merge uxp with user DataFrame
-# Here we select to perform a left join of uxp with user DataFrame based on matching key "user_id"
-# 
-# <img src="https://i.imgur.com/WlI84Ud.jpg" width="400">
-# 
-# Left join, ensures that the new DataFrame will have:
-# - all the observations of the uxp (combination of user and products) DataFrame 
-# - all the **matching** observations of user DataFrame with uxp based on matching key **"user_id"**
-# 
-# The new DataFrame as we have already mentioned, will be called **data**.
 
 # In[71]:
 
@@ -659,14 +612,6 @@ del uxp, user
 gc.collect()
 
 
-# ### 2.4.1 Merge data with prd DataFrame 📚📝
-# In this step we continue with our new DataFrame **data** and we perform a left join with prd DataFrame. The matching key here is the "product_id".
-# <img src="https://i.imgur.com/Iak6nIz.jpg" width="400">
-# 
-# Left join, ensures that the new DataFrame will have:
-# - all the observations of the data (features of userXproducts and users) DataFrame 
-# - all the **matching** observations of prd DataFrame with data based on matching key **"product_id"**
-
 # In[74]:
 
 
@@ -682,27 +627,6 @@ del prd
 gc.collect()
 
 
-# ### 2.4.2 Delete previous DataFrames
-
-# The information from the DataFrames that we have created to store our features (op, user, prd, uxp) is now stored on **data**. 
-# 
-# As we won't use them anymore, we now delete them.
-
-# # 3. Create train and test DataFrames
-# ## 3.1 Include information about the last order of each user
-# 
-# The **data** DataFrame that we have created on the previous chapter (2.4) should include two more columns which define the type of user (train or test) and the order_id of the future order.
-# This information can be found on the initial orders DataFrame which was provided by Instacart: 
-# 
-# <img style="float: left;" src="https://i.imgur.com/jbatzRY.jpg" >
-# 
-# 
-# Towards this end:
-# 1. We select the **orders** DataFrame to keep only the future orders (labeled as "train" & "test). 
-# 2. Keep only the columns of our desire ['eval_set', 'order_id'] <span style="color:red">**AND** </span> 'user_id' as is the matching key with our **data** DataFrame
-# 2. Merge **data** DataFrame with the information for the future order of each customer using as matching key the 'user_id'
-
-# To filter and select the columns of our desire on orders (the 2 first steps) there are numerous approaches:
 
 # In[ ]:
 
@@ -713,20 +637,7 @@ orders_future = orders[((orders.eval_set=='train') | (orders.eval_set=='test'))]
 orders_future = orders_future[ ['user_id', 'eval_set', 'order_id'] ]
 orders_future.head(10)
 
-## Second approach (if you want to test it you have to re-run the notebook):
-# In one step keep only the future orders from all customers: train & test 
-#orders_future = orders.loc[((orders.eval_set=='train') | (orders.eval_set=='test')), ['user_id', 'eval_set', 'order_id'] ]
-#orders_future.head(10)
 
-## Third approach (if you want to test it you have to re-run the notebook):
-# In one step exclude all the prior orders so to deal with the future orders from all customers
-#orders_future = orders.loc[orders.eval_set!='prior', ['user_id', 'eval_set', 'order_id'] ]
-#orders_future.head(10)
-
-
-# Now to fulfill step 3, we merge on **data** DataFrame the information for the last order of each customer. The matching key here is the user_id and we select a left join as we want to keep all the observations from **data** DataFrame.
-# 
-# <img src="https://i.imgur.com/m3pNVDW.jpg" width="400">
 
 # In[ ]:
 
@@ -736,17 +647,6 @@ data = data.merge(orders_future, on='user_id', how='left')
 data.head(10)
 
 
-# ## 3.2 Prepare the train DataFrame 📚📝
-# In order to prepare the train Dataset, which will be used to create our prediction model, we need to include also the response (Y) and thus have the following structure:
-# 
-# <img style="float: left;" src="https://i.imgur.com/PDu2vfR.jpg" >
-# 
-# Towards this end:
-# 1. We keep only the customers who are labelled as "train" from the competition
-# 2. For these customers we get from order_products_train the products that they have bought, in order to create the response variable (reordered:1 or 0)
-# 3. We make all the required manipulations on that dataset and we remove the columns that are not predictors
-# 
-# So now we filter the **data** DataFrame so to keep only the train users:
 
 # In[ ]:
 
@@ -756,9 +656,7 @@ data_train = data[data.eval_set=='train'] #
 data_train.head()
 
 
-# For these customers we get from order_products_train the products that they have bought. The matching keys are here two: the "product_id" & "order_id". A left join keeps all the observations from data_train DataFrame
-# 
-# <img src="https://i.imgur.com/kndys9d.jpg" width="400">
+
 
 # In[ ]:
 
@@ -768,13 +666,6 @@ data_train = data_train.merge(order_products_train[['product_id','order_id', 're
 data_train.head(15)
 
 
-# On the last columm (reordered) you can find out our response (y). 
-# There are combinations of User X Product which they were reordered (1) on last order where other were not (NaN value).
-# 
-# Now we manipulate the data_train DataFrame, to bring it into a structure for Machine Learning (X1,X2,....,Xn, y):
-# - Fill NaN values with value zero (regards reordered rows without value = 1)
-# - Set as index the column(s) that describe uniquely each row (in our case "user_id" & "product_id")
-# - Remove columns which are not predictors (in our case: 'eval_set','order_id')
 
 # In[ ]:
 
@@ -800,14 +691,6 @@ data_train = data_train.drop(['eval_set', 'order_id'], axis=1)
 data_train.head(15)
 
 
-# ## 3.3 Prepare the test DataFrame 📚📝
-# The test DataFrame must have the same structure as the train DataFrame, excluding the "reordered" column (as it is the label that we want to predict).
-# <img style="float: left;" src="https://i.imgur.com/lLJ7wpA.jpg" >
-# 
-#  To achieve this we:
-# - Keep only the customers who are labelled as test
-# - Set as index the column(s) that uniquely describe each row (in our case "user_id" & "product_id")
-# - Remove the columns that are predictors (in our case:'eval_set', 'order_id')
 
 # In[ ]:
 
@@ -834,52 +717,28 @@ data_test = data_test.drop(['eval_set','order_id'], axis=1)
 data_test.head()
 
 
-# # 4. Create predictive model (fit)
-# The Machine Learning model that we are going to create is based on the Logistic Regression Algorithm.
-# 
-# From Scikit-learn package we import the LogisticRegression estimator.
-# 
-# To create the predictive model we:
-# 1. We create a DataFrame with all the predictors, named **X_train** and a Series with the response, named **y_train**
-# 2. We initiata a Logistic regression model with a specific random_state (so we can reproduce if we want to our model).
-# 3. Finally we train our model with the X_train and y_train data.
 
 # In[ ]:
 
 
-# TRAIN FULL 
-###########################
-## IMPORT REQUIRED PACKAGES
-###########################
 import xgboost as xgb
 
-##########################################
-## SPLIT DF TO: X_train, y_train (axis=1)
-##########################################
+
 X_train, y_train = data_train.drop('reordered', axis=1), data_train.reordered
 
-########################################
-## SET BOOSTER'S PARAMETERS
-########################################
+
 parameters = {'eval_metric':'logloss', 
               'max_depth': 5, 
               'colsample_bytree': 0.4,
               'subsample': 0.75,
              }
 
-########################################
-## INSTANTIATE XGBClassifier()
-########################################
+
 xgbc = xgb.XGBClassifier(objective='binary:logistic', parameters=parameters, num_boost_round=10)
 
-########################################
-## TRAIN MODEL
-########################################
+
 model = xgbc.fit(X_train, y_train)
 
-##################################
-# FEATURE IMPORTANCE - GRAPHICAL
-##################################
 xgb.plot_importance(model)
 
 
@@ -892,51 +751,29 @@ model.get_xgb_params()
 # In[ ]:
 
 
-###########################
-## DISABLE WARNINGS
-###########################
+
 import sys
 import warnings
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
-###########################
-## IMPORT REQUIRED PACKAGES
-###########################
 import xgboost as xgb
 from sklearn.model_selection import GridSearchCV
 
-####################################
-## SET BOOSTER'S RANGE OF PARAMETERS
-# IMPORTANT NOTICE: Fine-tuning an XGBoost model may be a computational prohibitive process with a regular computer or a Kaggle kernel. 
-# Be cautious what parameters you enter in paramiGrid section.
-# More paremeters means that GridSearch will create and evaluate more models.
-####################################    
 paramGrid = {"max_depth":[5,10],
             "colsample_bytree":[0.3,0.4,0.5],
             "n_estimators":[50,100]}  
 
-########################################
-## INSTANTIATE XGBClassifier()
-########################################
 xgbc = xgb.XGBClassifier(objective='binary:logistic', eval_metric='logloss',num_boost_round=10,sampling_method='gradient_based', gpu_id=1, tree_method = 'gpu_hist')
 
-##############################################
-## DEFINE HOW TO TRAIN THE DIFFERENT MODELS
-#############################################
+
 gridsearch = GridSearchCV(xgbc, paramGrid, cv=3, verbose=2, n_jobs=1)
 
-################################################################
-## TRAIN THE MODELS
-### - with the combinations of different parameters
-### - here is where GridSearch will be exeucuted
-#################################################################
+
 model = gridsearch.fit(X_train, y_train)
 
-##################################
-## OUTPUT(S)
-##################################
+
 # Print the best parameters
 print("The best parameters are: /n",  gridsearch.best_params_)
 
@@ -947,9 +784,7 @@ model = gridsearch.best_estimator_
 # In[ ]:
 
 
-##################################
-# FEATURE IMPORTANCE - GRAPHICAL
-##################################
+
 xgb.plot_importance(model)
 
 
@@ -966,9 +801,7 @@ del [orders_future,X_train,y_train]
 gc.collect()
 
 
-# # 5. Apply predictive model (predict)
-# The model that we have created is stored in the **model** object.
-# At this step we predict the values for the test data and we store them in a new column in the same DataFrame.
+
 
 # In[ ]:
 
@@ -1008,10 +841,6 @@ gc.collect()
 final.head()
 
 
-# # 6. Creation of Submission File
-# To submit our prediction to Instacart competition we have to get for each user_id (test users) their last order_id. The final submission file should have the test order numbers and the products that we predict that are going to be bought.
-# 
-# To create this file we retrieve from orders DataFrame all the test orders with their matching user_id:
 
 # In[ ]:
 
@@ -1030,10 +859,6 @@ final = final.merge(orders_test, on='user_id', how='left')
 final.head()
 
 
-# And we move on with two final manipulations:
-# - remove any undesired column (in our case user_id)
-# - set product_id column as integer (mandatory action to proceed to the next step)
-
 # In[ ]:
 
 
@@ -1048,9 +873,6 @@ del orders_test
 gc.collect()
 
 final.head()
-
-
-# In this step we initiate an empty dictionary. In this dictionary we will place as index the order_id and as values all the products that the order will have. If none product will be purchased, we have explicitly to place the string "None". All this syntax follows the requirements of the competition for the submission file.
 
 # In[ ]:
 
@@ -1072,8 +894,6 @@ gc.collect()
 #We now check how the dictionary were populated (open hidden output)
 d
 
-
-# Now we convert the dictionary to a DataFrame and prepare it to extact it into a .csv file
 
 # In[ ]:
 
@@ -1104,29 +924,6 @@ sub.shape[0]
 
 
 sub.to_csv('sub.csv', index=False)
-
-
-# # 7. Get F1 Score
-
-# Before you are ready to submit your prediction to the competion, **ensure that**:
-# - **You have used all of the offered data and not the 10% that was defined as an optional step on section 1.2**
-# 
-# To submit your prediction and get the F1 score you have to:
-# 1. Commit this notebook and wait for the results 
-# 2. Go to view mode (where you see your notebook but you can't edit it)
-# 3. Click on the data section from your left panel
-# 4. Find the sub.csv (on outputs), below the section with the data from Instacart
-# 5. Click on "Submit to competition" button
-# 
-# Regarding step 1:
-# >This step might take long. If it exceeds 20-30 minutes it would be wise to check your code again. Kaggle won't inform you during commit if the notebook has:
-# - syntax errors
-# - if it exceeds 16 GB RAM
-# - if it takes an algorirthms too much to train or predict
-# 
-# >Any new commit:
-# - can't take more than 9 hours
-# - doesn't stop if it exceeds the 16 GB RAM - you will just receive an error of unsuccesful commit after 9 hours
 
 # In[ ]:
 
