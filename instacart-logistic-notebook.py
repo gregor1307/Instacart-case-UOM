@@ -3,13 +3,11 @@
 # In[1]:
 
 
-# For data manipulation
 import pandas as pd 
 
 
-# Garbage Collector to free up memory
 import gc                         
-gc.enable()                       # Activate 
+gc.enable()       
 
 
 # In[2]:
@@ -38,11 +36,8 @@ os.chdir(working_directory)
 for file in os.listdir(working_directory):   # get the list of files
     if zipfile.is_zipfile(file): # if it is a zipfile, extract it
         with zipfile.ZipFile(file) as item: # treat the file as a zip
-           item.extractall()  # extract it in the working directory
+           item.extractall()  # extract it in th
 
-
-# ## 1.2 Load data from the CSV files
-# Instacart provides 6 CSV files, which we have to load into Python. Towards this end, we use the .read_csv() function, which is included in the Pandas package. Reading in data with the .read_csv( ) function returns a DataFrame.
 
 # In[5]:
 
@@ -55,26 +50,8 @@ aisles = pd.read_csv('../input/aisles.csv')
 departments = pd.read_csv('../input/departments.csv')
 
 
-# This step results in the following DataFrames:
-# * <b>orders</b>: This table includes all orders, namely prior, train, and test. It has single primary key (<b>order_id</b>).
-# * <b>order_products_train</b>: This table includes training orders. It has a composite primary key (<b>order_id and product_id</b>) and indicates whether a product in an order is a reorder or not (through the reordered variable).
-# * <b>order_products_prior </b>: This table includes prior orders. It has a composite primary key (<b>order_id and product_id</b>) and indicates whether a product in an order is a reorder or not (through the reordered variable).
-# * <b>products</b>: This table includes all products. It has a single primary key (<b>product_id</b>)
-# * <b>aisles</b>: This table includes all aisles. It has a single primary key (<b>aisle_id</b>)
-# * <b>departments</b>: This table includes all departments. It has a single primary key (<b>department_id</b>)
-
-# If you want to reduce the execution time of this Kernel you can use the following piece of code by uncomment it. This will trim the orders DataFrame and will keep a 10% random sample of the users. You can use this for experimentation.
-
 # In[6]:
 
-
-
-#### Remove triple quotes to trim your dataset and experiment with your data
-# COMMANDS FOR CODING TESTING - Get 10% of users 
-###orders = orders.loc[orders.user_id.isin(orders.user_id.drop_duplicates().sample(frac=0.1, random_state=25))] 
-
-
-# We now use the .head( ) method in order to visualise the first 10 rows of these tables. Click the Output button below to see the tables.
 
 # In[7]:
 
