@@ -40,6 +40,8 @@ for file in os.listdir(working_directory):   # get the list of files
            item.extractall()  # extract it in the working directory
 
 
+import matplotlib
+matplotlib.use('Agg')
 
 
 # In[11]:
