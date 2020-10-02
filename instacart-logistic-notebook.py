@@ -686,7 +686,7 @@ paramGrid = {"max_depth":[5,10],
 ########################################
 ## INSTANTIATE XGBClassifier()
 ########################################
-xgbc = xgb.XGBClassifier(objective='binary:logistic', eval_metric='logloss',num_boost_round=10,sampling_method='gradient_based', tree_method = 'hist')
+xgbc = xgb.XGBClassifier(objective='binary:logistic', eval_metric='logloss',num_boost_round=10,sampling_method='gradient_based', tree_method = 'gpu_hist')
 
 ##############################################
 ## DEFINE HOW TO TRAIN THE DIFFERENT MODELS
